@@ -14,54 +14,29 @@ from IPython.display import display, clear_output
 import torch
 import numpy as np
 
-def generate_musics(model,
+def generate_music(model,
                    pitch_token_to_idx, octave_token_to_idx, duration_token_to_idx,
                    pitch_idx_to_token, octave_idx_to_token, duration_idx_to_token,
-                   device, max_gen_length=300, user_phrase_token=None, user_phrase=None):
+                   device, max_gen_length=300):
     """
     학습된 모델을 이용해 음악을 생성합니다.
 
     반환:
       - 생성된 피치, 옥타브, duration 토큰 시퀀스 (각각 리스트 형태).
     """
-    model.to(device)
     model.eval()
 
-
-    hidden = None  # LSTM의 초기 hidden state (None이면 0으로 초기화됨)
-
+    # 시작 토큰: 각 채널별로 <SOS>의 인덱스를 사용
+    current_pitch = torch.tensor([[pitch_token_to_idx["<SOS>"]]], dtype=torch.long, device=device)
+    current_octave = torch.tensor([[octave_token_to_idx["<SOS>"]]], dtype=torch.long, device=device)
+    current_duration = torch.tensor([[duration_token_to_idx["<SOS>"]]], dtype=torch.long, device=device)
 
     # 결과 시퀀스 저장 (초기 <SOS>는 나중에 제외할 수 있음)
     generated_pitch = [pitch_token_to_idx["<SOS>"]]
     generated_octave = [octave_token_to_idx["<SOS>"]]
     generated_duration = [duration_token_to_idx["<SOS>"]]
 
-
-    if user_phrase_token is not None:
-        pitch_token, octave_token, duration_token = user_phrase_token
-        token_length = len(pitch_token)
-        # 마지막 직전 음표까지는 hidden state만 update 시키고, 생성된 음표는 무시함.
-        for i in range(token_length):  # Time-step 별로 순차 입력
-            current_pitch = torch.tensor([[pitch_token_to_idx.get(pitch_token[i], pitch_token_to_idx["<PAD>"])]], dtype=torch.long, device=device)
-            current_octave = torch.tensor([[octave_token_to_idx.get(octave_token[i], octave_token_to_idx["<PAD>"])]], dtype=torch.long, device=device)
-            current_duration = torch.tensor([[duration_token_to_idx.get(duration_token[i], duration_token_to_idx["<PAD>"])]], dtype=torch.long, device=device)
-
-            _, _, _, hidden = model(current_pitch, current_octave, current_duration, hidden)
-
-            # 입력된 user_phrase_token을 그대로 결과에 저장
-            generated_pitch.append(pitch_token_to_idx.get(pitch_token[i], pitch_token_to_idx["<PAD>"]))
-            generated_octave.append(octave_token_to_idx.get(octave_token[i], octave_token_to_idx["<PAD>"]))
-            generated_duration.append(duration_token_to_idx.get(duration_token[i], duration_token_to_idx["<PAD>"]))
-            #print(i, current_pitch)
-
-    else:
-        token_length = 0
-        current_pitch = torch.tensor([[pitch_token_to_idx["<SOS>"]]], dtype=torch.long, device=device)
-        current_octave = torch.tensor([[octave_token_to_idx["<SOS>"]]], dtype=torch.long, device=device)
-        current_duration = torch.tensor([[duration_token_to_idx["<SOS>"]]], dtype=torch.long, device=device)
-
-    #print(generated_pitch)
-
+    hidden = None  # LSTM의 초기 hidden state (None이면 0으로 초기화됨)
 
     for i in range(max_gen_length):
         # 현재 입력(각 채널)으로 모델 실행. 입력 shape: (1, 1)
@@ -85,7 +60,7 @@ def generate_musics(model,
         generated_pitch.append(next_pitch)
         generated_octave.append(next_octave)
         generated_duration.append(next_duration)
-        #print(generated_pitch)
+
         # 피치 채널에서 <EOS> 토큰이 생성되면 종료 (혹은 모든 채널이 <EOS>가 되면 종료)
         if next_pitch == pitch_token_to_idx["<EOS>"]:
             break
@@ -101,6 +76,7 @@ def generate_musics(model,
     gen_duration_tokens = [duration_idx_to_token[idx] for idx in generated_duration[1:]]
 
     return gen_pitch_tokens, gen_octave_tokens, gen_duration_tokens
+
 
 class JungGanBoInputUI:
     def __init__(self):
