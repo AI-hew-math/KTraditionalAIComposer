@@ -14,7 +14,7 @@ from IPython.display import display, clear_output
 import torch
 import numpy as np
 
-def generate_music(model,
+def generate_musics(model,
                    pitch_token_to_idx, octave_token_to_idx, duration_token_to_idx,
                    pitch_idx_to_token, octave_idx_to_token, duration_idx_to_token,
                    device, max_gen_length=300):
