@@ -6,7 +6,7 @@ from music21 import stream
 from music21 import meter
 from music21 import note
 from music21 import key, metadata
-s
+
 ## dur_to_Junggan 함수 만들기 위한 곡 별 분류 기준 (그룹마다, 길이 해석이 다름)
 criterion_1 = ['01 G-Sangnyeongsan_Haegeum_part(0807)','01 G-Sangnyeongsan_Piri_part(0807)','01 J-Sangnyeongsan_Gayageum_part(0719)','01 J-Sangnyeongsan_Geomungo_part(0719)','01 P-Sangnyeongsan_Daegeum_part(0807)',
 '02 G-Jungnyeongsan_Haegeum_part(0807)','02 G-Jungnyeongsan_Piri_part(0807)','02 J-Jungnyeongsan_Gayageum_part(0722)','02 J-Jungnyeongsan_Geomungo_part(0722)','02 P-Jungnyeongsan_Daegeum_part(0807)',
@@ -167,7 +167,7 @@ def tokens_to_music21(generated_music, author='Anonymous', key_signature=-5,titl
     # music21의 stream 객체 생성
     music_stream = stream.Stream()
     music_stream.metadata = metadata.Metadata()
-    
+
     time_sig = meter.TimeSignature(time_signature)
     key_sig = key.KeySignature(key_signature)
     music_stream.append(time_sig)
