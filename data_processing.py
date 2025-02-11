@@ -146,8 +146,9 @@ def Insert_accummlated_Note(accummulation, music_stream):
             music_stream.append(n)
 
     return music_stream
-    
-def tokens_to_music21(generated_music, time_signature='18/8', cutting_number = 5):
+
+
+def tokens_to_music21(generated_music, author='Anonymous', key_signature='-5',title='AI Generated GukAk', time_signature='18/8', cutting_number = 5):
 
     pitch_tokens, octave_tokens, duration_tokens = generated_music
 
@@ -165,8 +166,11 @@ def tokens_to_music21(generated_music, time_signature='18/8', cutting_number = 5
     # music21의 stream 객체 생성
     music_stream = stream.Stream()
     time_sig = meter.TimeSignature(time_signature)
+    key_sig = key.KeySignature(key_signature)
     music_stream.append(time_sig)
-
+    music_stream.append(key_sig)
+    music_stream.metadata.title = title
+    music_stream.metadata.composer = author
 
     length_acc=[]
     accummulation = []
