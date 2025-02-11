@@ -210,17 +210,34 @@ class JungGanBoInputUI:
     def get_token(self):
         """객체 내부에 저장된 데이터를 반환"""
         return self.generated_data
-
+        
 def remove_special_tokens(generated_music) :
 
     gen_pitch, gen_octave, gen_duration = generated_music
 
-    remove_ind = []
-    for ind in list(np.where((np.array(gen_pitch) =='<EOS>')| (np.array(gen_pitch) =='<PAD>')| (np.array(gen_pitch) =='<SOS>'))[0])+ list(np.where( (np.array(gen_octave) == 0 )| (np.array(gen_octave) == '0' )| (np.array(gen_octave) =='<EOS>')| (np.array(gen_octave) =='<PAD>')| (np.array(gen_octave) =='<SOS>'))[0]) +  list(np.where( (np.array(gen_duration) =='<EOS>')| (np.array(gen_duration) =='<PAD>')| (np.array(gen_duration) =='<SOS>'))[0]):
-        if ind not in list(np.where((np.array(gen_pitch) =='rest'))[0]):
-            remove_ind.append(ind)
+    gen_pitch = np.array(gen_pitch)
+    gen_octave = np.array(gen_octave)
+    gen_duration = np.array(gen_duration)
 
-    remove_ind = list(set(remove_ind))
+
+    # 검사할 토큰들, 문자열과 숫자 포함
+    tokens = {'<EOS>', '<PAD>', '<SOS>', 0, '0'}
+
+    # 결과 인덱스 집합 초기화
+    indices = set()
+
+    # 각 배열에 대해 토큰이 있는지 검사하고 인덱스를 추가
+    for array in [gen_pitch, gen_octave, gen_duration]:
+        # array가 숫자로 구성된 경우
+        if array.dtype.kind in {'i', 'u', 'f'}:  # 데이터 타입이 정수형, 부호 없는 정수형, 실수형인 경우
+            numeric_tokens = {int(tok) for tok in tokens if isinstance(tok, int) or (isinstance(tok, str) and tok.isdigit())}
+            indices.update(np.where(np.isin(array, list(numeric_tokens)))[0])
+        # array가 문자열로 구성된 경우
+        elif array.dtype.kind in {'U', 'S'}:  # 데이터 타입이 유니코드 문자열, 바이트 문자열인 경우
+            string_tokens = {str(tok) for tok in tokens if isinstance(tok, str)}
+            indices.update(np.where(np.isin(array, list(string_tokens)))[0])
+
+    remove_ind = indices
 
     # 3개의 리스트를 2D 배열로 결합
     data = np.array([gen_pitch, gen_octave, gen_duration])
